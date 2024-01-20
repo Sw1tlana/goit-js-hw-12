@@ -8,36 +8,50 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 const searchForm = document.getElementById("searchForm");
 const galleryImages = document.querySelector("ul.gallery");
 const loader = document.querySelector(".loader");
+const loadBtn = document.querySelector(".load-btn");
 
-let perPage = 40;
+let perPage = 20;
 let page = 1;
 
 searchForm.addEventListener("submit", searchFormSubmit);
 
 loader.style.display = "none";
+loadBtn.style.display = "none";
 
-async function searchFormSubmit (evt) {
+async function searchFormSubmit(evt) {
     evt.preventDefault();
     galleryImages.innerHTML = "";
     const form = evt.currentTarget;
     const query = form.elements.searchQuery.value.trim();
 
-    if(query === "") {
+    if (query === "") {
         return;
     }
-    page +=1;
 
-    try {
-        const images = await fetchImages();
-        renderImages(images);
-    } catch(error) {
-       console.log(error);
-       loader.style.display = "none";
-        form.reset();
+    page = 1;
+    
+    const totalHits = Math.ceil(40 / perPage);
+
+    if (page > totalHits) {
+        return iziToast.error({
+            position: "topRight",
+            message: "We're sorry, but you've reached the end of search results."
+        })
     }
-}
+        try {
+            const images = await fetchImages(query);
+            renderImages(images.hits);
+            page += 1;
 
-    async function fetchImages() {
+        } catch (error) {
+            console.log(error);
+            loader.style.display = "none";
+            form.reset();
+        }
+    }
+
+
+    async function fetchImages(query) {
         const params = new URLSearchParams({
             image_type: "photo",
             orientation: "horizontal",
@@ -48,7 +62,7 @@ async function searchFormSubmit (evt) {
 
     const response = await axios.get(`https://pixabay.com/api/?key=41802498-7aef04e1b4b4791f33c618bc1&q=${query}&${params}`);
     loader.style.display = "block";
-        if (!data.total) {
+        if (!response.data.total) {
             iziToast.show({
                 message: '❌Sorry, there are no images matching your search query.Please try again!',
                 messageColor: '#ffffff',
@@ -59,8 +73,7 @@ async function searchFormSubmit (evt) {
             });
                 return galleryImages.innerHTML = "";
             }
-
-         return response.data;         
+         const data = response.data.hits;         
 }
 
 function renderImages(images) { 
