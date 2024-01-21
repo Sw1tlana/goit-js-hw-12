@@ -10,7 +10,7 @@ const galleryImages = document.querySelector("ul.gallery");
 const loader = document.querySelector(".loader");
 const loadBtn = document.querySelector(".load-btn");
 
-let perPage = 40;
+let perPage = 20;
 let page = 1;
 let currentQuery = "";
 let totalHits = 0;
@@ -34,15 +34,10 @@ async function searchFormSubmit(evt) {
    page = 1; 
    currentQuery = query;
 
-    loadBtn.style.display = "none";
-
         try {
             const images = await fetchImages(currentQuery);
             renderImages(images);
-
-            if(images.length < perPage) {
-                loadBtn.style.display = "none";
-              }
+            
 
         } catch (error) {
             console.log(error);
@@ -52,21 +47,35 @@ async function searchFormSubmit(evt) {
     }
 
     async function loadMoreImages() {
-      const images = await fetchImages(currentQuery);
-      renderImages(images);
-
-      page += 1;
-
-      if ((page * perPage) <= totalHits) {
-        loadBtn.style.display = "block";
-    } else {
+      try {
+        const images = await fetchImages(currentQuery);
+        renderImages(images);
+     
+        page += 1;
+    
+        if (page * perPage >= totalHits) {
+          loadBtn.style.display = "none";
+          iziToast.show({
+            message: '✅ All images have been loaded!',
+            messageColor: '#ffffff',
+            backgroundColor: '#41B883',
+            position: 'topRight',
+            maxWidth: '420px',
+            close: false,
+          });
+        } else {
+            loadBtn.style.display = "block";
+        }
+      } catch (error) {
+        console.log(error);
         loadBtn.style.display = "none";
-    }
+      }
       
     }
 
     async function fetchImages(currentQuery) {
         const params = new URLSearchParams({
+            q: currentQuery,
             image_type: "photo",
             orientation: "horizontal",
             safesearch: true,
@@ -74,14 +83,9 @@ async function searchFormSubmit(evt) {
             _page: page,
         })
 
-        loadBtn.style.display = "block";
-
         try {
             const response = await axios.get(`https://pixabay.com/api/?key=41802498-7aef04e1b4b4791f33c618bc1&q=${currentQuery}&${params}`);
-            console.log('Page:', page);
-            totalHits = response.data.totalHits; // оновіть totalHits на рівні модуля
-            console.log('Total Hits:', totalHits);
-            console.log('Condition:', (page * perPage) <= totalHits);
+            loadBtn.style.display = "block";
             if (!response.data.total) {
                 iziToast.show({
                     message: '❌Sorry, there are no images matching your search query. Please try again!',
@@ -91,12 +95,11 @@ async function searchFormSubmit(evt) {
                     maxWidth: '420px',
                     close: false,
                 });
-                galleryImages.innerHTML = "";
                 loadBtn.style.display = "none";
+                galleryImages.innerHTML = "";
             }
     
-            const data = response.data.hits;
-            return data;
+            return response.data.hits;
 
         } catch (error) {
             console.log(error);
