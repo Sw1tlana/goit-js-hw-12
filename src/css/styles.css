@@ -100,3 +100,25 @@ button[type="submit"]:hover {
   font-size: 12px;
   text-align: center;
 }
+
+/* -------- load-btn ----------*/
+.load-btn {
+margin: 0 auto;
+border: none;
+border-radius: 8px;
+background-color: #4E75FF;
+padding: 8px 16px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-family: Arial, sans-serif;
+color: #ffffff;
+line-height: 1.5;
+letter-spacing: 0.04em;
+font-weight: 500;
+}
+
+.load-btn:hover {
+  background-color: #6C8CFF;
+  border: none;
+}
