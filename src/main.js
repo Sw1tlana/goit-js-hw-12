@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
 
@@ -19,17 +20,13 @@ query: "",
 maxPage: 0,
 }
 
-const classHidden = "is-hidden";
-
 refs.loader.style.display = "none";
+refs.loadBtn.style.display = "none";
 
 refs.searchForm.addEventListener("submit", searchFormSubmit);
-refs.loadBtn.addEventListener("click", loadMoreImagesBtn);
 
 async function searchFormSubmit (evt) {
     evt.preventDefault();
-
-    refs.galleryImages.innerHTML = "";
 
     const form = evt.currentTarget;
     queryParams.query = form.elements.searchQuery.value.trim();
@@ -37,23 +34,26 @@ async function searchFormSubmit (evt) {
     if (!queryParams.query) {
         return;
     }
-
+    
+    refs.galleryImages.innerHTML = "";
     queryParams.page = 1; 
-
     refs.loader.style.display = "block";
-
+    
     try {
         const { hits, totalHits } = await fetchImages(queryParams);
 
         queryParams.maxPage = Math.ceil(totalHits / queryParams.perPage);
-        
-        if (hits.length > 0 && hits.length !== totalHits) {
-            refs.loadBtn.classList.remove(classHidden);
+        console.log(queryParams.maxPage)
+        renderImages(hits, refs.galleryImages)
 
-           renderImages(hits, refs.galleryImages);
+        if (hits.length > 0 && hits.length !== totalHits) {
+            refs.loadBtn.style.display = "block";
+
+        refs.loadBtn.addEventListener("click", loadMoreImagesBtn);
 
         } else {
-            refs.loadBtn.classList.add(classHidden);
+            refs.loadBtn.style.display = "none";
+            refs.loader.style.display = "none";
             iziToast.show({
                 message: '❌Sorry, there are no images matching your search query. Please try again!',
                 messageColor: '#ffffff',
@@ -62,8 +62,6 @@ async function searchFormSubmit (evt) {
                 maxWidth: '420px',
                 close: false,
             });
-
-            refs.galleryImages.innerHTML = "";
         }
     } catch(error) {
         onFetchError(error);
@@ -87,30 +85,37 @@ function fetchImages({ query, page = 1, perPage }) {
 } 
 
    async function loadMoreImagesBtn() {
-        queryParams.page += 1;
+    queryParams.page += 1;
+    refs.loader.style.display = "block";
+    refs.loadBtn.disabled = true;
 
-        refs.loader.style.display = "none";
-        refs.loadBtn.disablet = true;
-        
     try {
-
         const { hits } = await fetchImages(queryParams);
 
-           renderImages(hits, refs.galleryImages);
+        renderImages(hits, refs.galleryImages);
 
-        } catch(error) {
-            onFetchError(error);
-        } finally {
-            refs.loader.style.display = "none";
-            refs.loadBtn.disablet = false;
-        }
-
-        if(queryParams.page === queryParams.maxPage) {
-            refs.loadBtn.classList.add(classHidden);
-            refs.loader.style.display = "none";
-            refs.loadBtn.removeEventListener("click", loadMoreImagesBtn);
-        }
+    } catch (error) {
+        onFetchError(error);
+    } finally {
+        refs.loader.style.display = "none";
+        refs.loadBtn.disabled = false;
     }
+
+    if (queryParams.page === queryParams.maxPage) {
+        iziToast.show({
+            message: "We're sorry, but you've reached the end of search results.",
+            messageColor: '#ffffff',
+            backgroundColor: '#808080',
+            position: 'bottomLeft',
+            close: false,
+        });
+        refs.loadBtn.style.display = "none";
+        refs.loader.style.display = "none";
+        refs.loadBtn.removeEventListener("click", loadMoreImagesBtn);
+    }
+    }
+
+let lightboxInstance = null;
    
 function renderImages(images) { 
 const markup = images.map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) => {
@@ -131,12 +136,31 @@ const markup = images.map(({ webformatURL, largeImageURL, tags, likes, views, co
 
 refs.galleryImages.insertAdjacentHTML("beforeend", markup);
     
-const lightbox = new SimpleLightbox(document.querySelectorAll('.gallery a'));
-
-    lightbox.refresh();
+    if (!lightboxInstance) {
+        lightboxInstance = new SimpleLightbox('.gallery a');
+    } else {
+        lightboxInstance.refresh();
+    }
 }
 
 function onFetchError(error) {
-    console.log(error);
+    iziToast.error({
+        title: 'Error',
+        message: 'Wrong operation!!!',
+    });
     refs.loader.style.display = "none";
+    refs.loadBtn.style.display = "none";
+
 }
+
+const galleryItem = document.querySelector(".gallery-item");
+
+const galleryItemHeight = galleryItem.getBoundingClientRect().height;
+
+function smoothScrollToNextGroup() {
+    window.scrollBy({
+        top: galleryItemHeight * 2, 
+        behavior: "smooth",
+    });
+}
+smoothScrollToNextGroup();

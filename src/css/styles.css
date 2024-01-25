@@ -102,8 +102,11 @@ button[type="submit"]:hover {
 }
 
 /* -------- load-btn ----------*/
+
 .load-btn {
-margin: 0 auto;
+display: block;
+margin-left: auto;
+margin-right: auto;
 border: none;
 border-radius: 8px;
 background-color: #4E75FF;
@@ -125,9 +128,8 @@ font-weight: 500;
 
 .load-btn:disabled {
   background-color: #8e8989;
+  cursor: not-allowed;
 }
 
-.load-btn.is-hidden {
-  display: none;
-}
+
 
