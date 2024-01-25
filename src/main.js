@@ -11,6 +11,7 @@ searchForm: document.getElementById("searchForm"),
 galleryImages: document.querySelector("ul.gallery"),
 loader: document.querySelector(".loader"),
 loadBtn: document.querySelector(".load-btn"),
+galleryItem: document.querySelector("ul.gallery-item"),
 }
 
 const queryParams = {
@@ -43,7 +44,6 @@ async function searchFormSubmit (evt) {
         const { hits, totalHits } = await fetchImages(queryParams);
 
         queryParams.maxPage = Math.ceil(totalHits / queryParams.perPage);
-        console.log(queryParams.maxPage)
         renderImages(hits, refs.galleryImages)
 
         if (hits.length > 0 && hits.length !== totalHits) {
@@ -153,14 +153,13 @@ function onFetchError(error) {
 
 }
 
-const galleryItem = document.querySelector(".gallery-item");
-
-const galleryItemHeight = galleryItem.getBoundingClientRect().height;
-
-function smoothScrollToNextGroup() {
-    window.scrollBy({
+if (refs.galleryItem) {
+const galleryItemHeight = refs.galleryItem.getBoundingClientRect().height;
+    function smoothScrollToNextGroup() {
+      window.scrollBy({
         top: galleryItemHeight * 2, 
         behavior: "smooth",
-    });
-}
-smoothScrollToNextGroup();
+      });
+    }
+    smoothScrollToNextGroup();
+} 
