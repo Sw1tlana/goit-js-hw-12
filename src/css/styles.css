@@ -122,3 +122,12 @@ font-weight: 500;
   background-color: #6C8CFF;
   border: none;
 }
+
+.load-btn:disabled {
+  background-color: #8e8989;
+}
+
+.load-btn.is-hidden {
+  display: none;
+}
+
