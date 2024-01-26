@@ -31,7 +31,6 @@ function detachLoadMoreEvent() {
     refs.loadBtn.removeEventListener("click", loadMoreImagesBtn);
 }
 
-
 async function searchFormSubmit (evt) {
     evt.preventDefault();
 
