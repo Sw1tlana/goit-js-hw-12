@@ -12,19 +12,25 @@ galleryImages: document.querySelector("ul.gallery"),
 loader: document.querySelector(".loader"),
 loadBtn: document.querySelector(".load-btn"),
 galleryItem: document.querySelector("ul.gallery-item"),
-}
+};
 
 const queryParams = {
 perPage: 40,
 page: 1,
 query: "",
 maxPage: 0,
-}
-
-refs.loader.style.display = "none";
-refs.loadBtn.style.display = "none";
+};
 
 refs.searchForm.addEventListener("submit", searchFormSubmit);
+
+function attachLoadMoreEvent() {
+    refs.loadBtn.addEventListener("click", loadMoreImagesBtn);
+}
+
+function detachLoadMoreEvent() {
+    refs.loadBtn.removeEventListener("click", loadMoreImagesBtn);
+}
+
 
 async function searchFormSubmit (evt) {
     evt.preventDefault();
@@ -35,25 +41,33 @@ async function searchFormSubmit (evt) {
     if (!queryParams.query) {
         return;
     }
+    refs.loadBtn.classList.add("is-hidden");  
     
     refs.galleryImages.innerHTML = "";
-    queryParams.page = 1; 
-    refs.loader.style.display = "block";
-    
+    queryParams.page = 1;
+    refs.loader.classList.remove("is-hidden");
+ 
     try {
         const { hits, totalHits } = await fetchImages(queryParams);
 
         queryParams.maxPage = Math.ceil(totalHits / queryParams.perPage);
-        renderImages(hits, refs.galleryImages)
 
-        if (hits.length > 0 && hits.length !== totalHits) {
-            refs.loadBtn.style.display = "block";
+        renderImages(hits, refs.galleryImages);
 
-        refs.loadBtn.addEventListener("click", loadMoreImagesBtn);
+        smoothScrollToNextGroup();
+
+        if (hits.length >= queryParams.perPage) {
+            refs.loadBtn.classList.remove("is-hidden"); 
+    attachLoadMoreEvent();
 
         } else {
-            refs.loadBtn.style.display = "none";
-            refs.loader.style.display = "none";
+            refs.loader.classList.add("is-hidden");
+            refs.loadBtn.classList.add("is-hidden");  
+        }
+
+        if(hits.length === 0) {
+            refs.loader.classList.add("is-hidden");
+            refs.loadBtn.classList.add("is-hidden")
             iziToast.show({
                 message: '❌Sorry, there are no images matching your search query. Please try again!',
                 messageColor: '#ffffff',
@@ -62,7 +76,7 @@ async function searchFormSubmit (evt) {
                 maxWidth: '420px',
                 close: false,
             });
-        }
+        } 
     } catch(error) {
         onFetchError(error);
     } finally {
@@ -77,7 +91,7 @@ function fetchImages({ query, page = 1, perPage }) {
             image_type: "photo",
             orientation: "horizontal",
             safesearch: true,
-            perPage,
+            per_page: perPage,
             page,
         }
     })
@@ -86,18 +100,23 @@ function fetchImages({ query, page = 1, perPage }) {
 
    async function loadMoreImagesBtn() {
     queryParams.page += 1;
-    refs.loader.style.display = "block";
+    refs.loader.classList.remove("is-hidden");
     refs.loadBtn.disabled = true;
 
     try {
         const { hits } = await fetchImages(queryParams);
 
-        renderImages(hits, refs.galleryImages);
+         renderImages(hits, refs.galleryImages);
+
+        if (hits.length < queryParams.perPage) {
+            refs.loadBtn.classList.add("is-hidden");
+            detachLoadMoreEvent();
+        }       
 
     } catch (error) {
         onFetchError(error);
     } finally {
-        refs.loader.style.display = "none";
+        refs.loader.classList.add("is-hidden");
         refs.loadBtn.disabled = false;
     }
 
@@ -109,9 +128,8 @@ function fetchImages({ query, page = 1, perPage }) {
             position: 'bottomLeft',
             close: false,
         });
-        refs.loadBtn.style.display = "none";
-        refs.loader.style.display = "none";
-        refs.loadBtn.removeEventListener("click", loadMoreImagesBtn);
+        refs.loadBtn.classList.add("is-hidden");
+        detachLoadMoreEvent();
     }
     }
 
@@ -148,18 +166,17 @@ function onFetchError(error) {
         title: 'Error',
         message: 'Wrong operation!!!',
     });
-    refs.loader.style.display = "none";
-    refs.loadBtn.style.display = "none";
-
+    refs.loader.classList.add("is-hidden");
+    refs.loadBtn.classList.add("is-hidden");
 }
 
-if (refs.galleryItem) {
-const galleryItemHeight = refs.galleryItem.getBoundingClientRect().height;
-    function smoothScrollToNextGroup() {
+function smoothScrollToNextGroup() {
+    if (refs.galleryItem) {
+      const galleryItemHeight = refs.galleryItem.getBoundingClientRect().height;
       window.scrollBy({
         top: galleryItemHeight * 2, 
         behavior: "smooth",
       });
     }
-    smoothScrollToNextGroup();
-} 
+  }
+ 
