@@ -11,7 +11,6 @@ searchForm: document.getElementById("searchForm"),
 galleryImages: document.querySelector("ul.gallery"),
 loader: document.querySelector(".loader"),
 loadBtn: document.querySelector(".load-btn"),
-galleryItem: document.querySelector("ul.gallery-item"),
 };
 
 const queryParams = {
@@ -40,11 +39,12 @@ async function searchFormSubmit (evt) {
     if (!queryParams.query) {
         return;
     }
+
+    refs.loader.classList.remove("is-hidden");
     refs.loadBtn.classList.add("is-hidden");  
     
     refs.galleryImages.innerHTML = "";
     queryParams.page = 1;
-    refs.loader.classList.remove("is-hidden");
  
     try {
         const { hits, totalHits } = await fetchImages(queryParams);
@@ -170,8 +170,9 @@ function onFetchError(error) {
 }
 
 function smoothScrollToNextGroup() {
-    if (refs.galleryItem) {
-      const galleryItemHeight = refs.galleryItem.getBoundingClientRect().height;
+    const galleryItem = document.querySelector("ul.gallery-item");
+    if (galleryItem) {
+      const galleryItemHeight = galleryItem.getBoundingClientRect().height;
       window.scrollBy({
         top: galleryItemHeight * 2, 
         behavior: "smooth",
