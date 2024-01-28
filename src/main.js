@@ -53,11 +53,10 @@ async function searchFormSubmit (evt) {
 
         renderImages(hits, refs.galleryImages);
 
-        smoothScrollToNextGroup();
-
         if (hits.length >= queryParams.perPage) {
             refs.loadBtn.classList.remove("is-hidden"); 
-    attachLoadMoreEvent();
+
+        attachLoadMoreEvent();
 
         } else {
             refs.loader.classList.add("is-hidden");
@@ -80,6 +79,7 @@ async function searchFormSubmit (evt) {
         onFetchError(error);
     } finally {
         form.reset();
+        refs.loader.classList.add("is-hidden");
     }
 }
 
@@ -106,6 +106,7 @@ function fetchImages({ query, page = 1, perPage }) {
         const { hits } = await fetchImages(queryParams);
 
          renderImages(hits, refs.galleryImages);
+             smoothScrollToNextGroup();
 
         if (hits.length < queryParams.perPage) {
             refs.loadBtn.classList.add("is-hidden");
@@ -170,7 +171,7 @@ function onFetchError(error) {
 }
 
 function smoothScrollToNextGroup() {
-    const galleryItem = document.querySelector("ul.gallery-item");
+    const galleryItem = document.querySelector(".gallery-item");
     if (galleryItem) {
       const galleryItemHeight = galleryItem.getBoundingClientRect().height;
       window.scrollBy({
